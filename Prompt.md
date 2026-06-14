@@ -15,8 +15,16 @@ Build a local tutorial web using typescript/Javascript.
 
 --------------------------------------------------
 
-For all .NET projects in src folder, add logging of raw request that sending to Deepseek and Raw response from Deepseek. 
-Format content to be human friendly.
-Each request/reposne will be separate log file.
-Save the log in logs folder.
-Make the log directory configurable, save setting into application configuration file.
+For .NET projects in src folder, add logging of raw request that sending to Deepseek and raw response received from Deepseek.
+ 
+Requirement:
+- Format content to be human friendly.
+- Each request/reposne will be separate log file.
+- Save the log in logs folder.
+- Make the log directory configurable, save setting into application configuration file.
+
+---------------------------------------------------
+
+Add launch profile for all projects in src folder, enable debugging.
+
+

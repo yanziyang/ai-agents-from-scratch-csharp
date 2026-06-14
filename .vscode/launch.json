@@ -1,0 +1,171 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Chapter 01",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-01",
+      "program": "${workspaceFolder}/src/Chapter01/bin/Debug/net10.0/Chapter01.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 02",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-02",
+      "program": "${workspaceFolder}/src/Chapter02/bin/Debug/net10.0/Chapter02.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 03",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-03",
+      "program": "${workspaceFolder}/src/Chapter03/bin/Debug/net10.0/Chapter03.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 04",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-04",
+      "program": "${workspaceFolder}/src/Chapter04/bin/Debug/net10.0/Chapter04.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 05",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-05",
+      "program": "${workspaceFolder}/src/Chapter05/bin/Debug/net10.0/Chapter05.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 06",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-06",
+      "program": "${workspaceFolder}/src/Chapter06/bin/Debug/net10.0/Chapter06.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 07",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-07",
+      "program": "${workspaceFolder}/src/Chapter07/bin/Debug/net10.0/Chapter07.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 08",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-08",
+      "program": "${workspaceFolder}/src/Chapter08/bin/Debug/net10.0/Chapter08.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 09",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-09",
+      "program": "${workspaceFolder}/src/Chapter09/bin/Debug/net10.0/Chapter09.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 10",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-10",
+      "program": "${workspaceFolder}/src/Chapter10/bin/Debug/net10.0/Chapter10.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 11",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-11",
+      "program": "${workspaceFolder}/src/Chapter11/bin/Debug/net10.0/Chapter11.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 12",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-12",
+      "program": "${workspaceFolder}/src/Chapter12/bin/Debug/net10.0/Chapter12.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 13",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-13",
+      "program": "${workspaceFolder}/src/Chapter13/bin/Debug/net10.0/Chapter13.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 14",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-14",
+      "program": "${workspaceFolder}/src/Chapter14/bin/Debug/net10.0/Chapter14.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Chapter 15",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-chapter-15",
+      "program": "${workspaceFolder}/src/Chapter15/bin/Debug/net10.0/Chapter15.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": []
+}
