@@ -1,0 +1,19 @@
+{
+  "Memories": [
+    {
+      "Type": "fact",
+      "Key": "user_name",
+      "Value": "Alex",
+      "Source": "user",
+      "Timestamp": "2026-06-14T01:59:37.6315649Z"
+    },
+    {
+      "Type": "preference",
+      "Key": "favorite_food",
+      "Value": "pizza",
+      "Source": "user",
+      "Timestamp": "2026-06-14T01:59:37.6766983Z"
+    }
+  ],
+  "ConversationHistory": []
+}

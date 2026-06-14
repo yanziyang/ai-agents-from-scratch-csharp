@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Generated data
+src/data/generated/
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+*.log

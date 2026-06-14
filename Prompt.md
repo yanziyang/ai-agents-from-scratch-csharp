@@ -9,6 +9,4 @@ Other requirement:
 3. Do the changes chaper by chapter.
 4. Enrich the tutorial with mermaid digram if possible
 
--------------------------------------------------
-
 

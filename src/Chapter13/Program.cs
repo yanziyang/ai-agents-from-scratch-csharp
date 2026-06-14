@@ -30,9 +30,22 @@ var jsonOptions = new ChatCompletionOptions
 
 async Task<JsonElement> PromptJsonAsync(string prompt)
 {
-    var requestMessages = new List<ChatMessage>(messages) { ChatMessage.CreateUserMessage(prompt) };
-    var response = await chatClient.CompleteChatAsync(requestMessages, jsonOptions);
-    return JsonParser.Parse(response.Value.Content[0].Text);
+    for (var attempt = 1; ; attempt++)
+    {
+        var requestMessages = new List<ChatMessage>(messages) { ChatMessage.CreateUserMessage(prompt) };
+        var response = await chatClient.CompleteChatAsync(requestMessages, jsonOptions);
+        var text = response.Value.Content[0].Text;
+        try
+        {
+            return JsonParser.Parse(text, debug: true);
+        }
+        catch (JsonException ex) when (attempt < 3)
+        {
+            var delay = 300 * attempt + Random.Shared.Next(0, 200);
+            Console.WriteLine($"[retry] JSON parse failed (attempt {attempt}/3): {ex.Message}. Retrying in {delay}ms.");
+            await Task.Delay(delay);
+        }
+    }
 }
 
 var graph = new ThoughtGraph();
