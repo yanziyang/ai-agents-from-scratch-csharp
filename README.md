@@ -37,6 +37,25 @@ The website is **not a replacement for this repo**, but a **conceptual companion
 
 > Think of the site as the *map* and this repo as the *terrain*.
 
+### Run the companion website locally
+
+The full companion website source also lives in this repo under [`web/`](web/) as a static Next.js 16 app. It reads the chapter code under `src/ChapterNN/` and the docs under `examples/NN_*/`, so it always matches whatever revision of the tutorial you have checked out.
+
+```bash
+cd web
+npm install
+npm run dev          # http://localhost:3000
+```
+
+To produce a static export:
+
+```bash
+npm run build        # writes to web/out/
+npm run serve        # serves web/out/ locally
+```
+
+`npm run extract` (run automatically before `dev` and `build`) regenerates `web/src/data/generated/chapters.json` and `docs.json` from the chapters and `examples/`. See [`web/README.md`](web/README.md) for details.
+
 ---
 
 ## Prerequisites
@@ -390,6 +409,10 @@ ai-agents-from-scratch-csharp/
 │   └── 15_tool-routing-embeddings/
 │       ├── CODE.md
 │       └── CONCEPT.md
+├── web/                                ← Local companion website (Next.js 16)
+│   ├── scripts/extract-content.ts      ← Pulls chapters + docs into JSON
+│   ├── src/                            ← App Router pages and components
+│   └── README.md
 ├── models/                             ← Optional local GGUF models (Chapter 15)
 └── diagrams/
 ```
