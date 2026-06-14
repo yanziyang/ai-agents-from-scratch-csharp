@@ -1,11 +1,26 @@
+# Node.js / legacy
 models
 node_modules
-.idea
+node-llama-docs
 .env
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Secrets
+appsettings.Secrets.json
+
+# Runtime visualizations
+visualization.html
+
+# IDE / misc
+.idea
 internal
 ui
 *.txt
-node-llama-docs
-
 frontend*
 VIDEO_SCRIPT.md

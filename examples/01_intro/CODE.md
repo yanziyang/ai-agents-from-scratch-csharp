@@ -1,112 +1,91 @@
-# Code Explanation: intro.js
+# Code Explanation: Chapter 01 — Basic LLM Interaction
 
-This file demonstrates the most basic interaction with a local LLM (Large Language Model) using node-llama-cpp.
+This example shows the simplest possible interaction with a Large Language Model using .NET 10, the official `OpenAI` SDK, and the DeepSeek API.
+
+> **Source code:** `src/Chapter01/Program.cs`
+> **Run:** `dotnet run --project src/Chapter01`
 
 ## Step-by-Step Code Breakdown
 
-### 1. Import Required Modules
-```javascript
-import {
-    getLlama,
-    LlamaChatSession,
-} from "node-llama-cpp";
-import {fileURLToPath} from "url";
-import path from "path";
-```
-- **getLlama**: Main function to initialize the llama.cpp runtime
-- **LlamaChatSession**: Class for managing chat conversations with the model
-- **fileURLToPath** and **path**: Standard Node.js modules for handling file paths
+### 1. Import namespaces
 
-### 2. Set Up Directory Path
-```javascript
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+```csharp
+using AiAgents.Core.Client;
+using OpenAI.Chat;
 ```
-- Since ES modules don't have `__dirname` by default, we create it manually
-- This gives us the directory path of the current file
-- Needed to locate the model file relative to this script
 
-### 3. Initialize Llama Runtime
-```javascript
-const llama = await getLlama();
-```
-- Creates the main llama.cpp instance
-- This initializes the underlying C++ runtime for model inference
-- Must be done before loading any models
+- `AiAgents.Core.Client` contains our shared helpers for configuration and creating the DeepSeek client.
+- `OpenAI.Chat` provides the chat-completion types (`ChatMessage`, `ChatClient`, etc.).
 
-### 4. Load the Model
-```javascript
-const model = await llama.loadModel({
-    modelPath: path.join(
-        __dirname,
-        "../",
-        "models",
-        "Qwen3-1.7B-Q8_0.gguf"
-    )
-});
-```
-- Loads a quantized model file (GGUF format)
-- **Qwen3-1.7B-Q8_0.gguf**: A 1.7 billion parameter model, quantized to 8-bit
-- The model is stored in the `models` folder at the repository root
-- Loading the model into memory takes a few seconds
+### 2. Load configuration
 
-### 5. Create a Context
-```javascript
-const context = await model.createContext();
+```csharp
+var config = ConfigurationFactory.Create();
+var chatClient = DeepSeekClientFactory.CreateChatClient(config);
 ```
-- A **context** represents the model's working memory
-- It holds the conversation history and current state
-- Has a fixed size limit (default: model's maximum context size)
-- All prompts and responses are stored in this context
 
-### 6. Create a Chat Session
-```javascript
-const session = new LlamaChatSession({
-    contextSequence: context.getSequence(),
-});
-```
-- **LlamaChatSession**: High-level API for chat-style interactions
-- Uses a sequence from the context to maintain conversation state
-- Automatically handles prompt formatting and response parsing
+- `ConfigurationFactory.Create()` reads `appsettings.json`, the git-ignored `appsettings.Secrets.json`, and environment variables.
+- `DeepSeekClientFactory.CreateChatClient(...)` builds an `OpenAIClient` pointing at `https://api.deepseek.com` and returns a `ChatClient` configured for `deepseek-v4-flash`.
 
-### 7. Define the Prompt
-```javascript
-const prompt = `do you know node-llama-cpp`;
-```
-- Simple question to test if the model knows about the library we're using
-- This will be sent to the model for processing
+### 3. Build the message list
 
-### 8. Send Prompt and Get Response
-```javascript
-const a1 = await session.prompt(prompt);
-console.log("AI: " + a1);
+```csharp
+var messages = new List<ChatMessage>
+{
+    ChatMessage.CreateUserMessage("Do you know node-llama-cpp?")
+};
 ```
-- **session.prompt()**: Sends the prompt to the model and waits for completion
-- The model generates a response based on its training
-- We log the response to the console with "AI:" prefix
 
-### 9. Clean Up Resources
-```javascript
-session.dispose()
-context.dispose()
-model.dispose()
-llama.dispose()
+- DeepSeek uses the same chat-message format as OpenAI.
+- `ChatMessage.CreateUserMessage(...)` creates a message with role `user`.
+
+### 4. Send the prompt and print the response
+
+```csharp
+var response = await chatClient.CompleteChatAsync(messages);
+Console.WriteLine("AI: " + response.Value.Content[0].Text);
 ```
-- **Important**: Always dispose of resources when done
-- Frees up memory and GPU resources
-- Prevents memory leaks in long-running applications
-- Must be done in this order (session → context → model → llama)
+
+- `CompleteChatAsync` is asynchronous; it sends the messages to DeepSeek and waits for the full response.
+- `response.Value` is a `ChatCompletion`. Its `Content` collection contains the generated text parts.
+
+## Configuration
+
+### `appsettings.json` (committed)
+
+```json
+{
+  "DeepSeek": {
+    "BaseUrl": "https://api.deepseek.com",
+    "ChatModel": "deepseek-v4-flash"
+  }
+}
+```
+
+### `appsettings.Secrets.json` (NOT committed — add to `.gitignore`)
+
+```json
+{
+  "DeepSeek": {
+    "ApiKey": "your-deepseek-api-key-here"
+  }
+}
+```
+
+A template is provided as `appsettings.Secrets.example.json`. Copy it to `appsettings.Secrets.json` and insert your real key.
 
 ## Key Concepts Demonstrated
 
-1. **Basic LLM initialization**: Loading a model and creating inference context
-2. **Simple prompting**: Sending a question and receiving a response
-3. **Resource management**: Proper cleanup of allocated resources
+1. **Basic LLM API call**: Send a message list to a hosted model and receive a response.
+2. **Configuration outside code**: The API key lives in a secret config file, never in source control.
+3. **Async/await**: All network calls in .NET are asynchronous.
 
 ## Expected Output
 
-When you run this script, you should see output like:
 ```
-AI: Yes, I'm familiar with node-llama-cpp. It's a Node.js binding for llama.cpp...
+=== Introduction: Basic LLM Interaction ===
+
+AI: Yes, I'm familiar with node-llama-cpp. It is a Node.js binding for llama.cpp...
 ```
 
-The exact response will vary based on the model's training data and generation parameters.
+The exact wording depends on the model, temperature, and system prompt (none here).

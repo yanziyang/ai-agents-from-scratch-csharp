@@ -1,52 +1,59 @@
-# Code explanation: `tool-routing-embeddings.js`
+# Code explanation: `Program.cs` (Chapter 15)
 
-This example loads **two** GGUF models with one `getLlama()` instance: a **chat** model (Qwen3) and a **dedicated embedding** model (bge-small-en). Only the embedding model uses `createEmbeddingContext()`.
+This example uses **two models**: DeepSeek V4 Flash for chat/tool-calling and a **local GGUF embedding model** (LLamaSharp) for routing. The embedding model scores how close the user message is to short exemplar phrases per tool.
 
 ## Run
 
 ```bash
-node examples/15_tool-routing-embeddings/tool-routing-embeddings.js
+cd src/Chapter15
+dotnet run
 ```
 
-Requires both files under `models/` (see [DOWNLOAD.md](../../DOWNLOAD.md)): `Qwen3-1.7B-Q8_0.gguf` and `bge-small-en-v1.5-q8_0.gguf`.
+Requires a local embedding GGUF under `models/` (configured in `appsettings.json` as `Embeddings:ModelPath`).
+The example defaults to `models/bge-small-en-v1.5-q8_0.gguf`.
+
+> Copy `appsettings.Secrets.example.json` to `appsettings.Secrets.json` and add your DeepSeek API key before running.
 
 ---
 
-## 1) Two routing functions: `scoreTools` and `selectToolKeys`
+## 1) Two routing functions: `ScoreTools` and `SelectToolKeys`
 
-The routing logic is deliberately split into two small, inspectable functions. You can unit-test them independently and swap either one without touching the other.
+The routing logic is deliberately split into two small, inspectable methods. You can unit-test them independently and swap either one without touching the other.
 
-**`scoreTools`** - query vs. all exemplars, return a score per tool:
+**`ScoreTools`** - query vs. all exemplars, return a score per tool:
 
-```javascript
-function scoreTools(queryEmbedding, exemplarRows) {
-    const maxByTool = new Map();
-    for (const row of exemplarRows) {
-        const sim = queryEmbedding.calculateCosineSimilarity(row.embedding);
-        const prev = maxByTool.get(row.toolKey) ?? -Infinity;
-        if (sim > prev) maxByTool.set(row.toolKey, sim);
+```csharp
+static Dictionary<string, double> ScoreTools(float[] query, List<ExemplarRow> rows)
+{
+    var maxByTool = new Dictionary<string, double>();
+    foreach (var row in rows)
+    {
+        var sim = CosineSimilarity(query, row.Embedding);
+        if (!maxByTool.TryGetValue(row.ToolKey, out var current) || sim > current)
+        {
+            maxByTool[row.ToolKey] = sim;
+        }
     }
-    return maxByTool; // Map<toolKey, maxCosineSimilarity>
+    return maxByTool;
 }
 ```
 
-Each tool can have several exemplar strings. The score used is the **maximum** across all of them, not the mean. A single strong exemplar match keeps a tool competitive even if the other phrasings miss - this is the same "max-sim" strategy used in late-interaction retrieval models.
+Each tool can have several exemplar strings. The score used is the **maximum** across all of them, not the mean. A single strong exemplar match keeps a tool competitive even if the other phrasings miss.
 
-**`selectToolKeys`** - pick the top-k tools plus any pinned tools:
+**`SelectToolKeys`** - pick the top-k tools plus any pinned tools:
 
-```javascript
-function selectToolKeys(scores, k, alwaysInclude) {
-    const ranked = [...scores.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .map(([key]) => key);
-
-    const out = new Set(alwaysInclude);          // start with pinned tools
-    for (const key of ranked) {
-        if (out.size >= alwaysInclude.size + k) break;
-        if (alwaysInclude.has(key)) continue;    // pinned tools don't use a slot
-        out.add(key);
+```csharp
+static HashSet<string> SelectToolKeys(Dictionary<string, double> scores, int k, List<string> alwaysInclude)
+{
+    var ranked = scores.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).ToList();
+    var selected = new HashSet<string>(alwaysInclude);
+    foreach (var key in ranked)
+    {
+        if (selected.Count >= alwaysInclude.Count + k) break;
+        if (selected.Contains(key)) continue;
+        selected.Add(key);
     }
-    return out;
+    return selected;
 }
 ```
 
@@ -56,28 +63,18 @@ Pinned tools are added first and do **not** consume a retrieval slot. Requesting
 
 ## 2) Tool catalog (12 IT helpdesk tools)
 
-Every tool is a `defineChatSessionFunction` entry with a description, a JSON schema, and a handler. The handlers return canned JSON so the lesson stays focused on routing, not business logic.
+Every tool is declared with `ChatTool.CreateFunctionTool` plus a handler. The handlers return canned JSON so the lesson stays focused on routing, not business logic.
 
-```javascript
-const checkVPNStatus = defineChatSessionFunction({
-    description: "Check VPN client status, the active profile, and tunnel health for a user.",
-    params: {
-        type: "object",
-        properties: {
-            username: { type: "string", description: "Username to look up (optional)" },
-        },
-    },
-    async handler({ username = "current_user" } = {}) {
-        return JSON.stringify({
-            username,
-            vpn_client: "Cisco AnyConnect 4.10",
-            connected: false,
-            last_connected: "2026-05-14T09:31:00Z",
-            error: "Authentication timeout - check MFA token or try reconnecting",
-            profile: "Corp-HQ",
-        });
-    },
-});
+```csharp
+Make("checkVPNStatus", "Check VPN client status, the active profile, and tunnel health for a user.",
+    new { username = (string?)null },
+    args => JsonSerializer.Serialize(new
+    {
+        username = args.username ?? "current_user",
+        vpn_client = "Cisco AnyConnect 4.10",
+        connected = false,
+        // ...
+    }))
 ```
 
 The twelve tools cover five distinct semantic clusters. Distinct clusters matter: routing works because embedding similarity separates them.
@@ -92,34 +89,18 @@ The twelve tools cover five distinct semantic clusters. Distinct clusters matter
 
 ---
 
-## 3) `EXEMPLARS` and cold-start embedding
+## 3) `Exemplars` and cold-start embedding
 
-`EXEMPLARS` is a flat list of `{ toolKey, text }` pairs - three phrasings per tool (36 total):
-
-```javascript
-const EXEMPLARS = [
-    // checkVPNStatus
-    { toolKey: "checkVPNStatus", text: "remote tunnel to corporate network not establishing from outside office" },
-    { toolKey: "checkVPNStatus", text: "VPN client shows disconnected even after entering valid credentials" },
-    { toolKey: "checkVPNStatus", text: "AnyConnect auth keeps timing out when working remotely" },
-
-    // getUserAccount
-    { toolKey: "getUserAccount", text: "account suspended or locked in Active Directory after failed logins" },
-    { toolKey: "getUserAccount", text: "verify user permissions and group membership in the directory" },
-    { toolKey: "getUserAccount", text: "sign-in blocked, need to confirm account standing" },
-    // ...
-];
-```
-
-The strings are **not** copied from the demo prompts - they are paraphrases. If exemplars were near-identical to live queries, routing would look "magic" but you would be testing verbatim recall, not semantic generalization.
+`Exemplars.Load()` returns a flat list of `(ToolKey, Text)` pairs — three phrasings per tool (36 total). The strings are **not** copied from the demo prompts; they are paraphrases so the example tests semantic generalization, not verbatim recall.
 
 At startup, every exemplar is embedded once and cached:
 
-```javascript
-const exemplarRows = [];
-for (const { toolKey, text } of EXEMPLARS) {
-    const embedding = await embedContext.getEmbeddingFor(text);
-    exemplarRows.push({ toolKey, exemplarText: text, embedding });
+```csharp
+var exemplarRows = new List<ExemplarRow>();
+foreach (var e in exemplars)
+{
+    var embedding = await GetEmbeddingAsync(e.Text);
+    exemplarRows.Add(new ExemplarRow(e.ToolKey, e.Text, embedding));
 }
 ```
 
@@ -127,96 +108,51 @@ In a production service you would persist these vectors and rebuild them only wh
 
 ---
 
-## 4) Model setup: one `llama` instance, two models
+## 4) Model setup: chat + local embedding model
 
-Both models are loaded through the same `llama` handle but each gets its own context type:
+The chat model uses the OpenAI .NET SDK pointed at DeepSeek:
 
-```javascript
-const llama = await getLlama({ debug });
-
-// Chat model - uses a LlamaChatSession
-const chatModel = await llama.loadModel({ modelPath: CHAT_MODEL_PATH });
-const chatContext = await chatModel.createContext({ contextSize: 4096 });
-const session = new LlamaChatSession({
-    contextSequence: chatContext.getSequence(),
-    chatWrapper: new QwenChatWrapper({ thoughts: "discourage" }),
-    systemPrompt: `You are a concise IT helpdesk assistant. ...`,
-});
-
-// Embedding model - uses createEmbeddingContext, not a chat context
-const embedModel = await llama.loadModel({ modelPath: EMBED_MODEL_PATH });
-const embedContext = await embedModel.createEmbeddingContext();
+```csharp
+var chatClient = DeepSeekClientFactory.CreateChatClient(config);
 ```
 
-`QwenChatWrapper({ thoughts: "discourage" })` prevents the Qwen3 model from writing the post-tool answer inside internal "thought" segments, which would make `session.prompt()` return an empty string.
+The embedding model uses LLamaSharp:
+
+```csharp
+var parameters = new ModelParams(modelPath) { Embeddings = true, ContextSize = 512 };
+using var weights = LLamaWeights.LoadFromFile(parameters);
+using var embedder = new LLamaEmbedder(weights, parameters);
+```
 
 ---
 
-## 5) `runWithRouting` - routing + prompt + logging
+## 5) `RunWithRoutingAsync` - routing + prompt + logging
 
-Each demo case calls this function. It runs the full pipeline and appends a record to `routingLog` for the visualization:
+Each demo case calls this method. It runs the full pipeline and appends a record to `routingLog` for the visualization:
 
-```javascript
-async function runWithRouting(userPrompt, { retrievalK, alwaysInclude = new Set(), label }) {
-    // 1. Embed the live query
-    const queryEmbedding = await embedContext.getEmbeddingFor(userPrompt);
+```csharp
+async Task RunWithRoutingAsync(string userPrompt, RoutingOptions options)
+{
+    var queryEmbedding = await GetEmbeddingAsync(userPrompt);
+    var scores = ScoreTools(queryEmbedding, exemplarRows);
+    var selectedKeys = SelectToolKeys(scores, options.RetrievalK, options.AlwaysInclude);
 
-    // 2. Score all tools and select the subset
-    const scores = scoreTools(queryEmbedding, exemplarRows);
-    const selectedKeys = selectToolKeys(scores, retrievalK, alwaysInclude);
+    // print ranked table...
 
-    // 3. Print a ranked similarity table (top 6)
-    const ranked = [...scores.entries()].sort((a, b) => b[1] - a[1]);
-    for (const [key, sim] of ranked.slice(0, 6)) {
-        const tick = selectedKeys.has(key) ? "✓" : " ";
-        const bar = "█".repeat(Math.round(sim * 24)).padEnd(24);
-        console.log(`  [${tick}] ${key.padEnd(28)} ${sim.toFixed(4)}  ${bar}`);
-    }
+    var selectedTools = tools.Where(t => selectedKeys.Contains(t.Key)).ToList();
+    var answer = await RunAgentLoopAsync(userPrompt, selectedTools);
 
-    // 4. Pass only the selected subset to session.prompt
-    const functions = pickFunctions(selectedKeys, allFunctions);
-    const answer = await session.prompt(userPrompt, { functions, maxTokens: 1200, temperature: 0 });
-
-    // 5. Reset history so each case is independent
-    session.resetChatHistory();
-
-    // 6. Store for visualization
-    routingLog.push({ label, userPrompt, scores: Object.fromEntries(scores),
-                      selectedKeys: [...selectedKeys], alwaysInclude: [...alwaysInclude],
-                      retrievalK, answer: answer.trim() });
+    routingLog.Add(new VisualizationWriters.ToolRoutingLogEntry(...));
 }
 ```
 
-The similarity table is the key teaching output. The `✓` mark shows exactly which tools the LLM can see. Every other tool is invisible to it for that turn.
+The similarity table is the key teaching output. The `x` mark shows exactly which tools the LLM can see. Every other tool is invisible to it for that turn.
 
 ---
 
 ## 6) Demo cases (read the console)
 
 Cases are called in order. The first four establish baselines; cases 5 and 6 are the **same prompt** with different routing parameters to demonstrate recall failure and how pinning fixes it:
-
-```javascript
-// Cases 1-2: single intent, k=1 - one tool cluster dominates
-await runWithRouting(DEMO_VPN,    { retrievalK: 1, label: "Single intent - VPN failure ..." });
-await runWithRouting(DEMO_LOCKED, { retrievalK: 1, label: "Single intent - locked account ..." });
-
-// Cases 3-4: dual intent, k=2 - two clusters both needed
-await runWithRouting(DEMO_CRASHING_PC,      { retrievalK: 2, label: "Dual intent - crashing PC ..." });
-await runWithRouting(DEMO_DISK_AND_SOFTWARE, { retrievalK: 2, label: "Dual intent - disk full + software ..." });
-
-// Case 5: dual intent, k=1 - recall failure: VPN dominates, account tool is cut
-await runWithRouting(DEMO_VPN_AND_LOCKED_K1, {
-    retrievalK: 1,
-    label: "Dual intent - VPN + locked account, k=1: recall failure ...",
-});
-
-// Case 6: same prompt, k=1 + pinned getUserAccount - both intents covered without raising k
-await runWithRouting(DEMO_VPN_AND_LOCKED_K1, {
-    retrievalK: 1,
-    alwaysInclude: new Set(["getUserAccount"]),
-    label: "Dual intent - same query, k=1 + pinned getUserAccount ...",
-});
-```
 
 | # | Intent | k | Pinned | Expected tools exposed |
 |---|---|---|---|---|
@@ -231,13 +167,4 @@ await runWithRouting(DEMO_VPN_AND_LOCKED_K1, {
 
 ## 7) Disposal
 
-Resources are disposed in reverse dependency order:
-
-```javascript
-session.dispose();
-chatContext.dispose();
-chatModel.dispose();
-embedContext.dispose();
-embedModel.dispose();
-llama.dispose();
-```
+`weights` and `embedder` are created inside `using` statements so native resources are released when `Main` exits.

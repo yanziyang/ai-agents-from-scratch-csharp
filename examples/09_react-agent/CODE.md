@@ -1,278 +1,99 @@
-# Code Explanation: react-agent.js
+# Code Explanation: Chapter 09 — ReAct Agent
 
-This example implements the **ReAct pattern** (Reasoning + Acting), a powerful approach for multi-step problem-solving with tools.
+This example implements the **ReAct pattern** (Reasoning + Acting): the agent alternates between thinking, calling a tool, observing the result, and repeating until it reaches a final answer.
 
-## What is ReAct?
+> **Source code:** `src/Chapter09/Program.cs`
+> **Run:** `dotnet run --project src/Chapter09`
 
-ReAct = **Rea**soning + **Act**ing
+## ReAct System Prompt
 
-The agent alternates between:
-1. **Thinking** (reasoning about what to do)
-2. **Acting** (using tools)
-3. **Observing** (seeing tool results)
-4. Repeat until problem is solved
+```csharp
+const string systemPrompt = """
+    You are a mathematical assistant that uses the ReAct (Reasoning + Acting) approach.
 
-## Key Components
+    CRITICAL: Follow this EXACT pattern:
 
-### 1. ReAct System Prompt (Lines 20-52)
-```javascript
-const systemPrompt = `You are a mathematical assistant that uses the ReAct approach.
-
-CRITICAL: You must follow this EXACT pattern:
-
-Thought: [Explain what calculation you need]
-Action: [Call ONE tool]
-Observation: [Wait for result]
-Thought: [Analyze result]
-Action: [Call another tool if needed]
-...
-Thought: [Once you have all information]
-Answer: [Final answer and STOP]
+    Thought: [Explain what calculation you need to do next and why]
+    Action: [Call ONE tool with specific numbers]
+    Observation: [Wait for the tool result]
+    ...
+    Thought: [Once you have ALL the information needed]
+    Answer: [Give the final answer and STOP]
+    """;
 ```
 
-**Key instructions:**
-- Explicit step-by-step pattern
-- One tool call at a time
-- Continue until final answer
-- Stop after "Answer:"
+The system prompt forces the model to show its reasoning and to use tools for every calculation.
 
-### 2. Calculator Tools (Lines 60-159)
+## Calculator Tools
 
-Four basic math operations:
-```javascript
-const add = defineChatSessionFunction({...});
-const multiply = defineChatSessionFunction({...});
-const subtract = defineChatSessionFunction({...});
-const divide = defineChatSessionFunction({...});
-```
+Four math tools are registered in a `ToolBox`:
 
-Each tool:
-- Takes two numbers (a, b)
-- Performs operation
-- Logs the call
-- Returns result as string
+- `add(a, b)`
+- `multiply(a, b)`
+- `subtract(a, b)`
+- `divide(a, b)`
 
-### 3. ReAct Agent Loop (Lines 164-212)
+Each handler logs the call and returns the numeric result.
 
-```javascript
-async function reactAgent(userPrompt, maxIterations = 10) {
-    let iteration = 0;
-    let fullResponse = "";
-    
-    while (iteration < maxIterations) {
-        iteration++;
-        
-        // Prompt the LLM
-        const response = await session.prompt(
-            iteration === 1 ? userPrompt : "Continue your reasoning.",
-            {
-                functions,
-                maxTokens: 300,
-                onTextChunk: (chunk) => {
-                    process.stdout.write(chunk);  // Stream output
-                    currentChunk += chunk;
-                }
-            }
-        );
-        
-        fullResponse += currentChunk;
-        
-        // Check if final answer reached
-        if (response.toLowerCase().includes("answer:")) {
-            return fullResponse;
-        }
-    }
+## ReAct Loop
+
+```csharp
+for (var iteration = 1; iteration <= maxIterations; iteration++)
+{
+    var response = await chatClient.CompleteChatAsync(messages, options);
+    var text = response.Value.Content[0].Text;
+    Console.WriteLine(text);
+    messages.Add(ChatMessage.CreateAssistantMessage(text));
+
+    if (text.Contains("Answer:", StringComparison.OrdinalIgnoreCase))
+        return; // done
+
+    var hadToolCalls = await toolbox.HandleToolCallsAsync(response.Value, messages);
+    if (!hadToolCalls)
+        return; // no progress possible
 }
 ```
 
-**How it works:**
-1. Loop up to maxIterations times
-2. On first iteration: send user's question
-3. On subsequent iterations: ask to continue
-4. Stream output in real-time
-5. Stop when "Answer:" appears
-6. Return full reasoning trace
+- The loop runs up to `maxIterations` times.
+- Each iteration prints the model's Thought/Action text.
+- Tool results are appended as `tool` messages.
+- The loop stops when the model emits `Answer:`.
 
-### 4. Example Query (Lines 215-220)
-
-```javascript
-const queries = [
-    "A store sells 15 items Monday at $8 each, 20 items Tuesday at $8 each, 
-     10 items Wednesday at $8 each. What's the average items per day and total revenue?"
-];
-```
-
-Complex problem requiring multiple calculations:
-- 15 × 8
-- 20 × 8
-- 10 × 8
-- Sum results
-- Calculate average
-- Format answer
-
-## The ReAct Flow
-
-### Example Execution
+## Example Execution
 
 ```
-USER: "A store sells 15 items at $8 each and 20 items at $8 each. Total revenue?"
+USER QUESTION: A store sells 15 items on Monday at $8 each, 20 on Tuesday at $8 each, 10 on Wednesday at $8 each. What's the average number of items sold per day, and what's the total revenue?
 
-Iteration 1:
-Thought: First I need to calculate 15 × 8
+--- Iteration 1 ---
+Thought: First I need to calculate revenue for Monday.
 Action: multiply(15, 8)
+
+   TOOL CALLED: multiply(15, 8)
+   RESULT: 120
+
 Observation: 120
-
-Iteration 2:
-Thought: Now I need to calculate 20 × 8
-Action: multiply(20, 8)
-Observation: 160
-
-Iteration 3:
-Thought: Now I need to add both results
-Action: add(120, 160)
-Observation: 280
-
-Iteration 4:
-Thought: I have the total revenue
-Answer: The total revenue is $280
-```
-
-**Loop stops** because "Answer:" was detected.
-
-## Why ReAct Works
-
-### Traditional Approach (Fails)
-```
-User: "Complex math problem"
-LLM: [Tries to calculate in head]
-→ Often wrong due to arithmetic errors
-```
-
-### ReAct Approach (Succeeds)
-```
-User: "Complex math problem"
-LLM: "I need to calculate X"
-  → Calls calculator tool
-  → Gets accurate result
-  → Uses result for next step
-  → Continues until solved
+...
+Answer: The average is 15 items per day and the total revenue is $280.
 ```
 
 ## Key Concepts
 
-### 1. Explicit Reasoning
-The agent must "show its work":
-```
-Thought: What do I need to do?
-Action: Do it
-Observation: What happened?
-```
-
-### 2. Tool Use at Each Step
-```
-Don't calculate: 15 × 8 = 120 (may be wrong)
-Do calculate: multiply(15, 8) → 120 (always correct)
+```mermaid
+flowchart LR
+    T[Thought] --> A[Action]
+    A --> O[Observation]
+    O --> T
+    T --> Final[Answer]
 ```
 
-### 3. Iterative Problem Solving
-```
-Complex Problem → Break into steps → Solve each step → Combine results
-```
+## Why ReAct Works
 
-### 4. Self-Correction
-Agent can observe bad results and try again:
-```
-Thought: That doesn't look right
-Action: Let me recalculate
-```
+- **Reliability**: arithmetic is done by code, not the LLM.
+- **Transparency**: reasoning is visible.
+- **Iterative**: complex problems are broken into small steps.
 
-## Debug Output
+## Experiment Ideas
 
-The code includes PromptDebugger (lines 228-234):
-```javascript
-const promptDebugger = new PromptDebugger({
-    outputDir: './logs',
-    filename: 'react_calculator.txt',
-    includeTimestamp: true
-});
-await promptDebugger.debugContextState({session, model});
-```
-
-Saves complete prompt history to logs for debugging.
-
-## Expected Output
-
-```
-========================================================
-USER QUESTION: [Problem statement]
-========================================================
-
---- Iteration 1 ---
-Thought: First I need to multiply 15 by 8
-Action: multiply(15, 8)
-
-   🔧 TOOL CALLED: multiply(15, 8)
-   📊 RESULT: 120
-
-Observation: 120
-
---- Iteration 2 ---
-Thought: Now I need to multiply 20 by 8
-Action: multiply(20, 8)
-
-   🔧 TOOL CALLED: multiply(20, 8)
-   📊 RESULT: 160
-
-... continues ...
-
---- Iteration N ---
-Thought: I have all the information
-Answer: [Final answer]
-
-========================================================
-FINAL ANSWER REACHED
-========================================================
-```
-
-## Why This Matters
-
-### Enables Complex Tasks
-- Multi-step reasoning
-- Accurate calculations
-- Self-correction
-- Transparent process
-
-### Foundation of Modern Agents
-This pattern powers:
-- LangChain agents
-- AutoGPT
-- BabyAGI
-- Most production agent frameworks
-
-### Observable Reasoning
-Unlike "black box" LLMs, you see:
-- What the agent is thinking
-- Which tools it uses
-- Why it makes decisions
-- Where it might fail
-
-## Best Practices
-
-1. **Clear system prompt**: Define exact pattern
-2. **One tool per action**: Don't combine operations
-3. **Limit iterations**: Prevent infinite loops
-4. **Stream output**: Show progress
-5. **Debug thoroughly**: Use PromptDebugger
-
-## Comparison
-
-```
-Simple Agent vs ReAct Agent
-────────────────────────────
-Single prompt/response      Multi-step iteration
-One tool call (maybe)       Multiple tool calls
-No visible reasoning        Explicit reasoning
-Works for simple tasks      Handles complex problems
-```
-
-This is the state-of-the-art pattern for building capable AI agents!
+1. Change the question to one that needs division or subtraction.
+2. Lower `maxIterations` and see what happens.
+3. Add a `verify` tool that checks previous results.

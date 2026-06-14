@@ -1,104 +1,131 @@
-# AI Agents From Scratch
+# AI Agents From Scratch — .NET 10 / DeepSeek Edition
 
-Learn to build AI agents locally without frameworks. Understand what happens under the hood before using production frameworks.
+Learn to build AI agents from first principles in C# with .NET 10. The examples use **DeepSeek V4 Flash** via the OpenAI .NET SDK, so you can focus on agent patterns without managing a local chat model. Chapter 15 also shows how to add a **local embedding model** with LLamaSharp for tool routing.
 
 ![Agent architecture overview](diagrams/agent-architecture.png)
 
-
 ## Purpose
 
-This repository teaches you to build AI agents from first principles using **local LLMs** and **node-llama-cpp**. By working through these examples, you'll understand:
+This repository teaches you to build AI agents from first principles. By working through these examples, you'll understand:
 
 - How LLMs work at a fundamental level
 - What agents really are (LLM + tools + patterns)
 - How different agent architectures function
 - Why frameworks make certain design choices
 
-> A Python version of this tutorial is available here:
+> A JavaScript/TypeScript version of the original tutorial is available here:
 > https://github.com/pguso/agents-from-scratch
 
 **Philosophy**: Learn by building. Understand deeply, then use frameworks wisely.
 
-## Companion Website 
+## Companion Website
 
-This repository now has a **matching companion website**:
+This repository has a **matching companion website**:
 
 **https://agentsfromscratch.com**
 
 The website is **not a replacement for this repo**, but a **conceptual companion** that:
 
-- Explains *why* each example exists  
-- Visualizes the learning path from raw LLM calls to full agents  
-- Separates **code**, **explanations**, and **core concepts**  
-- Helps you understand agent architectures before using frameworks  
+- Explains *why* each example exists
+- Visualizes the learning path from raw LLM calls to full agents
+- Separates **code**, **explanations**, and **core concepts**
+- Helps you understand agent architectures before using frameworks
 
 **Recommended workflow:**
-- Use **GitHub** for running, modifying, and studying the code  
-- Use the **website** for mental models, explanations, and progression  
+- Use **GitHub** for running, modifying, and studying the code
+- Use the **website** for mental models, explanations, and progression
 
 > Think of the site as the *map* and this repo as the *terrain*.
 
-## Agent Fundamentals - From LLMs to ReAct
+---
 
-### Prerequisites
-- Node.js 18+
-- At least 8GB RAM (16GB recommended)
-- Download models and place in `./models/` folder, details in [DOWNLOAD.md](DOWNLOAD.md)
+## Prerequisites
 
-### Installation
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- A DeepSeek API key (sign up at https://platform.deepseek.com)
+- At least 8 GB RAM (16 GB recommended if you run the local embedding model in Chapter 15)
+
+## Setup
+
+1. Clone the repository.
+2. For every chapter project, copy the secrets example file:
+   ```bash
+   cp src/Chapter01/appsettings.Secrets.example.json src/Chapter01/appsrets.json
+   ```
+   Or run the helper once per project:
+   ```bash
+   Get-ChildItem src/Chapter* | ForEach-Object { Copy-Item "$($_.FullName)\appsettings.Secrets.example.json" "$($_.FullName)\appsettings.Secrets.json" }
+   ```
+3. Add your DeepSeek API key to each `appsettings.Secrets.json`.
+4. (Optional, for Chapter 15) Download an embedding GGUF model and place it under `models/`. See [DOWNLOAD.md](DOWNLOAD.md).
+
+## Run Examples
+
+Each chapter is a standalone .NET console app under `src/`.
+
 ```bash
-npm install
+cd src/Chapter01
+dotnet run
 ```
 
-### Run Examples
 ```bash
-node intro/intro.js
-node simple-agent/simple-agent.js
-node react-agent/react-agent.js
+cd src/Chapter07
+dotnet run
 ```
+
+```bash
+cd src/Chapter09
+dotnet run
+```
+
+You can also build the whole solution:
+
+```bash
+dotnet build
+```
+
+---
 
 ## Learning Path
 
 Follow these examples in order to build understanding progressively:
 
-### 1. **Introduction** - Basic LLM Interaction
-`intro/` | [Code](examples/01_intro/intro.js) | [Code Explanation](examples/01_intro/CODE.md) | [Concepts](examples/01_intro/CONCEPT.md)
+### 1. **Introduction** — Basic LLM Interaction
+`src/Chapter01` | [Concepts](examples/01_intro/CONCEPT.md) | [Code Explanation](examples/01_intro/CODE.md)
 
 **What you'll learn:**
-- Loading and running a local LLM
+- Calling a hosted LLM from C#
 - Basic prompt/response cycle
 
-**Key concepts**: Model loading, context, inference pipeline, token generation
+**Key concepts**: Chat client, API key configuration, inference endpoint
 
 ---
 
-### 2. (Optional) **OpenAI Intro** - Using Proprietary Models
-`openai-intro/` | [Code](examples/02_openai-intro/openai-intro.js) | [Code Explanation](examples/02_openai-intro/CODE.md) | [Concepts](examples/02_openai-intro/CONCEPT.md)
+### 2. **DeepSeek Intro** — Using the OpenAI .NET SDK with DeepSeek
+`src/Chapter02` | [Concepts](examples/02_deepseek-intro/CONCEPT.md) | [Code Explanation](examples/02_deepseek-intro/CODE.md)
 
 **What you'll learn:**
-- How to call hosted LLMs (like GPT-4)
-- Temperature Control
-- Token Usage
+- Pointing the OpenAI .NET SDK at DeepSeek's base URL
+- Temperature and token usage
 
-**Key concepts**: Inference endpoints, network latency, cost vs control, data privacy, vendor dependence
+**Key concepts**: OpenAI-compatible endpoints, base URL, model name
 
 ---
 
-### 3. **Translation** - System Prompts & Specialization
-`translation/` | [Code](examples/03_translation/translation.js) | [Code Explanation](examples/03_translation/CODE.md) | [Concepts](examples/03_translation/CONCEPT.md)
+### 3. **Translation** — System Prompts & Specialization
+`src/Chapter03` | [Concepts](examples/03_translation/CONCEPT.md) | [Code Explanation](examples/03_translation/CODE.md)
 
 **What you'll learn:**
 - Using system prompts to specialize agents
 - Output format control
 - Role-based behavior
-- Chat wrappers for different models
 
 **Key concepts**: System prompts, agent specialization, behavioral constraints, prompt engineering
 
 ---
 
-### 4. **Think** - Reasoning & Problem Solving
-`think/` | [Code](examples/04_think/think.js) | [Code Explanation](examples/04_think/CODE.md) | [Concepts](examples/04_think/CONCEPT.md)
+### 4. **Think** — Reasoning & Problem Solving
+`src/Chapter04` | [Concepts](examples/04_think/CONCEPT.md) | [Code Explanation](examples/04_think/CODE.md)
 
 **What you'll learn:**
 - Configuring LLMs for logical reasoning
@@ -110,21 +137,20 @@ Follow these examples in order to build understanding progressively:
 
 ---
 
-### 5. **Batch** - Parallel Processing
-`batch/` | [Code](examples/05_batch/batch.js) | [Code Explanation](examples/05_batch/CODE.md) | [Concepts](examples/05_batch/CONCEPT.md)
+### 5. **Batch** — Parallel Processing
+`src/Chapter05` | [Concepts](examples/05_batch/CONCEPT.md) | [Code Explanation](examples/05_batch/CODE.md)
 
 **What you'll learn:**
 - Processing multiple requests concurrently
-- Context sequences for parallelism
-- GPU batch processing
-- Performance optimization
+- Parallel async patterns in C#
+- Throughput optimization
 
-**Key concepts**: Parallel execution, sequences, batch size, throughput optimization
+**Key concepts**: Parallel execution, async/await, batch size, throughput optimization
 
 ---
 
-### 6. **Coding** - Streaming & Response Control
-`coding/` | [Code](examples/06_coding/coding.js) | [Code Explanation](examples/06_coding/CODE.md) | [Concepts](examples/06_coding/CONCEPT.md)
+### 6. **Coding** — Streaming & Response Control
+`src/Chapter06` | [Concepts](examples/06_coding/CONCEPT.md) | [Code Explanation](examples/06_coding/CODE.md)
 
 **What you'll learn:**
 - Real-time streaming responses
@@ -136,8 +162,8 @@ Follow these examples in order to build understanding progressively:
 
 ---
 
-### 7. **Simple Agent** - Function Calling (Tools)
-`simple-agent/` | [Code](examples/07_simple-agent/simple-agent.js) | [Code Explanation](examples/07_simple-agent/CODE.md) | [Concepts](examples/07_simple-agent/CONCEPT.md)
+### 7. **Simple Agent** — Function Calling (Tools)
+`src/Chapter07` | [Concepts](examples/07_simple-agent/CONCEPT.md) | [Code Explanation](examples/07_simple-agent/CODE.md)
 
 **What you'll learn:**
 - Function calling / tool use fundamentals
@@ -151,8 +177,8 @@ Follow these examples in order to build understanding progressively:
 
 ---
 
-### 8. **Simple Agent with Memory** - Persistent State
-`simple-agent-with-memory/` | [Code](examples/08_simple-agent-with-memory/simple-agent-with-memory.js) | [Code Explanation](examples/08_simple-agent-with-memory/CODE.md) | [Concepts](examples/08_simple-agent-with-memory/CONCEPT.md)
+### 8. **Simple Agent with Memory** — Persistent State
+`src/Chapter08` | [Concepts](examples/08_simple-agent-with-memory/CONCEPT.md) | [Code Explanation](examples/08_simple-agent-with-memory/CODE.md)
 
 **What you'll learn:**
 - Persisting information across sessions
@@ -164,8 +190,8 @@ Follow these examples in order to build understanding progressively:
 
 ---
 
-### 9. **ReAct Agent** - Reasoning + Acting
-`react-agent/` | [Code](examples/09_react-agent/react-agent.js) | [Code Explanation](examples/09_react-agent/CODE.md) | [Concepts](examples/09_react-agent/CONCEPT.md)
+### 9. **ReAct Agent** — Reasoning + Acting
+`src/Chapter09` | [Concepts](examples/09_react-agent/CONCEPT.md) | [Code Explanation](examples/09_react-agent/CODE.md)
 
 **What you'll learn:**
 - ReAct pattern (Reason → Act → Observe)
@@ -179,8 +205,8 @@ Follow these examples in order to build understanding progressively:
 
 ---
 
-### 10. **AoT Agent** - Atom of Thought Planning
-`aot-agent/` | [Code](examples/10_aot-agent/aot-agent.js) | [Code Explanation](examples/10_aot-agent/CODE.md) | [Concepts](examples/10_aot-agent/CONCEPT.md)
+### 10. **AoT Agent** — Atom of Thought Planning
+`src/Chapter10` | [Concepts](examples/10_aot-agent/CONCEPT.md) | [Code Explanation](examples/10_aot-agent/CODE.md)
 
 **What you'll learn:**
 - Atom of Thought methodology
@@ -193,51 +219,47 @@ Follow these examples in order to build understanding progressively:
 
 ---
 
-### 11. **Error Handling** - Resilience for LLM + Tools
-`error-handling/` | [Code](examples/11_error-handling/error-handling.js) | [Code Explanation](examples/11_error-handling/CODE.md) | [Concepts](examples/11_error-handling/CONCEPT.md)
+### 11. **Error Handling** — Resilience for LLM + Tools
+`src/Chapter11` | [Concepts](examples/11_error-handling/CONCEPT.md) | [Code Explanation](examples/11_error-handling/CODE.md)
 
 **What you'll learn:**
 - Typed error taxonomy (validation, LLM, tools, workflow) with stable codes
 - Timeouts, retries with backoff/jitter, and classifying transient failures
 - Graceful degradation when the LLM path fails (deterministic tool fallback)
-- Orchestration-level errors (`AgentWorkflowError`) and correlation ids for support
+- Orchestration-level errors and correlation ids for support
 
 **Key concepts**: Error taxonomy, retry policies, timeouts, fallbacks, degraded mode, observability, user-safe messaging
 
 ---
 
-### 12. **Tree of Thought** - Search over reasoning branches
-`tree-of-thought/` | [Code](examples/12_tree-of-thought/tree-of-thought.js) | [Code Explanation](examples/12_tree-of-thought/CODE.md) | [Concepts](examples/12_tree-of-thought/CONCEPT.md)
+### 12. **Tree of Thought** — Search over reasoning branches
+`src/Chapter12` | [Concepts](examples/12_tree-of-thought/CONCEPT.md) | [Code Explanation](examples/12_tree-of-thought/CODE.md)
 
 **What you'll learn:**
-- Generating multiple candidate next actions from the same partial plan
+- Generating multiple candidate hypotheses from the same behavior
 - Ranking and pruning branches with a deterministic score in code
-- Running a compact beam search loop with inspectable kept/pruned decisions
-- Verifying the winning path with explicit sanity checks
+- Running a compact search loop with inspectable kept/pruned decisions
 
-**Key concepts**: Tree of Thought, beam search, branch pruning, verifiable objectives, search controllers
+**Key concepts**: Tree of Thought, branch/score/prune, verifiable objectives, search controllers
 
 ---
 
-### 13. **Graph of Thought** - DAG merge for multi-source outputs
-`graph-of-thought/` | [Code](examples/13_graph-of-thought/graph-of-thought.js) | [Code Explanation](examples/13_graph-of-thought/CODE.md) | [Concepts](examples/13_graph-of-thought/CONCEPT.md)
+### 13. **Graph of Thought** — DAG merge for multi-source outputs
+`src/Chapter13` | [Concepts](examples/13_graph-of-thought/CONCEPT.md) | [Code Explanation](examples/13_graph-of-thought/CODE.md)
 
 **What you'll learn:**
-- Modeling reasoning as a DAG: parallel source extracts → merge rules → final draft
-- Resolving conflicts explicitly before generation (`must_include`, `must_avoid`, `conflict_notes`)
-- Adding deterministic merge and draft compliance checks
+- Modeling reasoning as a graph: parallel hypotheses → contrast → refine → aggregate → conclude
+- Keeping weaker branches alive and improving them
 - Running independent nodes in parallel to reduce latency
 
-**Key concepts**: Graph of Thought, DAG orchestration, multi-source fusion, merge-before-generate, policy reconciliation
+**Key concepts**: Graph of Thought, DAG orchestration, multi-source fusion, merge-before-generate
 
-**Decision guide**: use ToT when you need to search competing paths; use GoT when you need to combine multiple sources into one consistent policy. Compare both in:
-- [ToT concept](examples/12_tree-of-thought/CONCEPT.md)
-- [GoT concept](examples/13_graph-of-thought/CONCEPT.md)
+**Decision guide**: use ToT when you need to search competing paths; use GoT when you need to combine multiple sources into one consistent view.
 
 ---
 
-### 14. **Chain of Thought** - Auditable stepwise decisioning
-`chain-of-thought/` | [Code](examples/14_chain-of-thought/chain-of-thought.js) | [Code Explanation](examples/14_chain-of-thought/CODE.md) | [Concepts](examples/14_chain-of-thought/CONCEPT.md)
+### 14. **Chain of Thought** — Auditable stepwise decisioning
+`src/Chapter14` | [Concepts](examples/14_chain-of-thought/CONCEPT.md) | [Code Explanation](examples/14_chain-of-thought/CODE.md)
 
 **What you'll learn:**
 - Splitting a high-stakes decision into explicit reasoning phases
@@ -245,17 +267,17 @@ Follow these examples in order to build understanding progressively:
 - Balancing fraud signals with legitimacy evidence before policy application
 - Producing an auditable final decision with customer-safe and internal outputs
 
-**Key concepts**: Chain of Thought, structured reasoning traces, policy-constrained decisions, explainability, review-ready workflows
+**Key concepts**: Chain of Thought, structured reasoning traces, policy-constrained decisions, explainability
 
 ---
 
-### 15. **Tool routing (embeddings)** - Narrow the tool catalog per request
-`tool-routing-embeddings/` | [Code](examples/15_tool-routing-embeddings/tool-routing-embeddings.js) | [Code Explanation](examples/15_tool-routing-embeddings/CODE.md) | [Concepts](examples/15_tool-routing-embeddings/CONCEPT.md)
+### 15. **Tool routing (embeddings)** — Narrow the tool catalog per request
+`src/Chapter15` | [Concepts](examples/15_tool-routing-embeddings/CONCEPT.md) | [Code Explanation](examples/15_tool-routing-embeddings/CODE.md)
 
 **What you'll learn:**
 - Precomputing embeddings for short **exemplar** phrases per tool
-- Scoring the user message against exemplars (cosine similarity) with a small embedding model
-- Passing only **top-k** tools (plus optional **always-include** tools) into `session.prompt`
+- Scoring the user message against exemplars (cosine similarity) with a local embedding model
+- Passing only **top-k** tools (plus optional **always-include** tools) into the chat model
 - Observing **recall** failure when k is too small for multi-intent prompts
 
 **Key concepts**: Tool routing, embedding similarity, exemplar design, context/token savings, pinned tools, retrieval-style agent design
@@ -266,22 +288,17 @@ Follow these examples in order to build understanding progressively:
 
 Each example folder contains:
 
-- **`<name>.js`** - The working code example
-- **`CODE.md`** - Step-by-step code explanation
-- Line-by-line breakdowns
-- What each part does
-- How it works
-- **`CONCEPT.md`** - High-level concepts
-- Why it matters for agents
-- Architectural patterns
-- Real-world applications
-- Simple diagrams
+- **`src/ChapterXX/Program.cs`** — The working C# code example
+- **`src/ChapterXX/appsettings.json`** — Non-secret configuration (DeepSeek base URL, model name, optional embedding model path)
+- **`src/ChapterXX/appsettings.Secrets.example.json`** — Example secrets file (copy to `appsettings.Secrets.json`)
+- **`examples/XX_name/CODE.md`** — Step-by-step code explanation
+- **`examples/XX_name/CONCEPT.md`** — High-level concepts, Mermaid diagrams, and real-world applications
 
 ## Core Concepts
 
 ### What is an AI Agent?
 
-```
+```text
 AI Agent = LLM + System Prompt + Tools + Memory + Reasoning Pattern
            ─┬─   ──────┬──────   ──┬──   ──┬───   ────────┬────────
             │          │           │       │              │
@@ -290,135 +307,99 @@ AI Agent = LLM + System Prompt + Tools + Memory + Reasoning Pattern
 
 ### Evolution of Capabilities
 
-```
+```text
 1. intro          → Basic LLM usage
-2. translation    → Specialized behavior (system prompts)
-3. think          → Reasoning ability
-4. batch          → Parallel processing
-5. coding         → Streaming & control
-6. simple-agent   → Tool use (function calling)
-7. memory-agent   → Persistent state
-8. react-agent    → Strategic reasoning + tool use
+2. deepseek-intro → Hosted LLM via OpenAI-compatible API
+3. translation    → Specialized behavior (system prompts)
+4. think          → Reasoning ability
+5. batch          → Parallel processing
+6. coding         → Streaming & control
+7. simple-agent   → Tool use (function calling)
+8. memory-agent   → Persistent state
+9. react-agent    → Strategic reasoning + tool use
 ```
 
 ### Architecture Patterns
 
-**Simple Agent (Steps 1-5)**
-```
+**Simple Agent (Chapters 1-5)**
+```text
 User → LLM → Response
 ```
 
-**Tool-Using Agent (Step 6)**
-```
+**Tool-Using Agent (Chapter 7)**
+```text
 User → LLM ⟷ Tools → Response
 ```
 
-**Memory Agent (Step 7)**
-```
+**Memory Agent (Chapter 8)**
+```text
 User → LLM ⟷ Tools → Response
        ↕
      Memory
 ```
 
-**ReAct Agent (Step 8)**
-```
+**ReAct Agent (Chapter 9)**
+```text
 User → LLM → Think → Act → Observe
        ↑      ↓      ↓      ↓
        └──────┴──────┴──────┘
            Iterate until solved
 ```
 
-## ️ Helper Utilities
+---
 
-### PromptDebugger
-`helper/prompt-debugger.js`
+## Helper Utilities
 
-Utility for debugging prompts sent to the LLM. Shows exactly what the model sees, including:
-- System prompts
-- Function definitions
-- Conversation history
-- Context state
+### `AiAgents.Core`
 
-Usage example in `simple-agent/simple-agent.js`
+A shared .NET class library under `src/AiAgents.Core` provides reusable helpers used across chapters:
 
-## ️ Project Structure - Fundamentals
+- `DeepSeekClientFactory` — creates an OpenAI `ChatClient` configured for DeepSeek
+- `ConfigurationFactory` — loads `appsettings.json` + `appsettings.Secrets.json`
+- `ToolBox` — register .NET delegates as LLM-callable tools
+- `MemoryManager` — simple JSON file-based memory
+- `JsonParser` — robust JSON parsing with repair attempts
+- `VisualizationWriters` — HTML visualization writers for ToT, GoT, CoT, and tool routing
+- `RetryHelper` and typed exception taxonomy — resilience helpers
 
-```
-ai-agents/
-├── README.md                          ← You are here
-├─ examples/
-├── 01_intro/
-│   ├── intro.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 02_openai-intro/
-│   ├── openai-intro.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 03_translation/
-│   ├── translation.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 04_think/
-│   ├── think.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 05_batch/
-│   ├── batch.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 06_coding/
-│   ├── coding.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 07_simple-agent/
-│   ├── simple-agent.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 08_simple-agent-with-memory/
-│   ├── simple-agent-with-memory.js
-│   ├── memory-manager.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 09_react-agent/
-│   ├── react-agent.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 10_aot-agent/
-│   ├── aot-agent.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 11_error-handling/
-│   ├── error-handling.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 12_tree-of-thought/
-│   ├── tree-of-thought.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 13_graph-of-thought/
-│   ├── graph-of-thought.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 14_chain-of-thought/
-│   ├── chain-of-thought.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── 15_tool-routing-embeddings/
-│   ├── tool-routing-embeddings.js
-│   ├── CODE.md
-│   └── CONCEPT.md
-├── helper/
-│   └── prompt-debugger.js
-├── models/                             ← Place your GGUF models here
-└── logs/                               ← Debug outputs
+## Project Structure
+
+```text
+ai-agents-from-scratch-csharp/
+├── README.md
+├── DOWNLOAD.md                         ← Model download notes
+├── AiAgentsFromScratch.slnx
+├── src/
+│   ├── AiAgents.Core/                  ← Shared library
+│   │   ├── Client/
+│   │   ├── Exceptions/
+│   │   ├── Memory/
+│   │   ├── Parsing/
+│   │   ├── Tools/
+│   │   └── Visualization/
+│   ├── Chapter01/                      ← One console app per chapter
+│   ├── Chapter02/
+│   │   ...
+│   └── Chapter15/
+├── examples/
+│   ├── 01_intro/
+│   │   ├── CODE.md
+│   │   └── CONCEPT.md
+│   ├── 02_deepseek-intro/
+│   │   ...
+│   └── 15_tool-routing-embeddings/
+│       ├── CODE.md
+│       └── CONCEPT.md
+├── models/                             ← Optional local GGUF models (Chapter 15)
+└── diagrams/
 ```
 
 ## Additional Resources
 
-- **node-llama-cpp**: [GitHub](https://github.com/withcatai/node-llama-cpp)
-- **Model Hub**: [Hugging Face](https://huggingface.co/models?library=gguf)
-- **GGUF Format**: Quantized models for local inference
+- **OpenAI .NET SDK**: https://github.com/openai/openai-dotnet
+- **DeepSeek API docs**: https://platform.deepseek.com/api-docs
+- **LLamaSharp**: https://github.com/SciSharp/LLamaSharp
+- **Hugging Face GGUF models**: https://huggingface.co/models?library=gguf
 
 ## Contributing
 
@@ -430,12 +411,12 @@ This is a learning resource. Feel free to:
 
 ## License
 
-Educational resource - use and modify as needed for learning.
+Educational resource — use and modify as needed for learning.
 
 ---
 
-**Built with ❤️ for people who want to truly understand AI agents**
+**Built with care for people who want to truly understand AI agents**
 
-Start with `intro/` and work your way through. Each example builds on the previous one. Read both CODE.md and CONCEPT.md for full understanding.
+Start with `src/Chapter01` and work your way through. Each example builds on the previous one. Read both `CODE.md` and `CONCEPT.md` for full understanding.
 
-Happy learning! 
+Happy learning!

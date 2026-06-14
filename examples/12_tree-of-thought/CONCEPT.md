@@ -6,19 +6,22 @@
 
 ### Visual tree
 
-```text
-[Behavior: "Person leaves secure job without a clear plan"]
-         |
-    [Phase 1: Branch - 4 hypotheses]
-    /        |         |        \
-[Avoidance][Burnout][Growth][External pressure]
-    |         |          |            |
-[Phase 2: Score]
-   6         9          7            4
-             |
-      [Phase 3: Prune - losers removed]
-             |
- [Phase 4: Conclusion from ONLY Burnout]
+```mermaid
+graph TD
+    B["Behavior: Person leaves secure job without a clear plan"]
+    B --> H1[Avoidance motivation]
+    B --> H2[Burnout and exhaustion]
+    B --> H3[Growth motivation]
+    B --> H4[External social pressure]
+    H1 --> S1["Score: 6"]
+    H2 --> S2["Score: 9"]
+    H3 --> S3["Score: 7"]
+    H4 --> S4["Score: 4"]
+    S2 --> W["Winner: Burnout"]
+    W --> C["Conclusion from winner only"]
+    style B fill:#e1f5fe
+    style W fill:#c8e6c9
+    style C fill:#c8e6c9
 ```
 
 ---
@@ -38,15 +41,15 @@ This intentionally highlights both ToT's strength (structured exploration) and w
 
 | Principle | What happens in code |
 |---|---|
-| Branching | `developHypothesis()` creates one hypothesis per lens |
-| Evaluation | `scoreHypothesis()` scores each hypothesis |
-| Pruning | `pruneHypotheses()` discards all non-winners |
+| Branching | `DevelopHypothesisAsync()` creates one hypothesis per lens |
+| Evaluation | `ScoreHypothesisAsync()` scores each hypothesis |
+| Pruning | `Main()` keeps only `winner` and stores the rest as `discarded` |
 
 ---
 
 ### Structural downside shown explicitly
 
-At the end, the console prints what got discarded.  
+At the end, the program prints the discarded branches.  
 Those branches may contain corrective insights, but they do not influence the final conclusion anymore.
 
 That is the core limitation of strict ToT pruning.

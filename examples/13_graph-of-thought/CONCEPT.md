@@ -7,25 +7,34 @@ Unlike Tree of Thought, weaker branches are not automatically discarded.
 
 ### Visual graph shape
 
-```text
-                    [root: behavior]
-                   /    |      |    \
-             [n2]    [n3]   [n4]   [n5]      <- 4 hypotheses (branch)
-          Avoidance Burnout Growth Pressure
-             Sc:6     Sc:9    Sc:7   Sc:4
-                \      / \            |
-                 \    /   \           |
-              [n6:Contrast]  [n7:Contrast]    <- Burnout vs Avoidance / Burnout vs Pressure
-              (n3 vs n2)     (n3 vs n5)
-                  |    \         |
-                  |   [n8:Refined]  [n9:Refined]  <- weak hypothesis rescued and improved
-                  |    (n5+n3)      (n4+n6)
-                  |        \       /
-              [n10:Synthesis1]  [n11:Synthesis2] <- partial syntheses
-              (n3,n2,n6)        (n8,n9,n7)
-                    \              /
-                   [n12:CONCLUSION]            <- all strands merged
-                  (n10,n11,n6,n7,n8)
+```mermaid
+graph TD
+    R["root: behavior"]
+    R --> H1["n2: Avoidance<br/>score 6"]
+    R --> H2["n3: Burnout<br/>score 9"]
+    R --> H3["n4: Growth<br/>score 7"]
+    R --> H4["n5: External pressure<br/>score 4"]
+    H1 --- C1["n6: Contrast"]
+    H2 --- C1
+    H2 --- C2["n7: Contrast"]
+    H4 --- C2
+    H4 --> R1["n8: Refined"]
+    H2 --> R1
+    H3 --> R2["n9: Refined"]
+    C1 --> R2
+    H1 --> S1["n10: Synthesis"]
+    H2 --> S1
+    C1 --> S1
+    R1 --> S2["n11: Synthesis"]
+    R2 --> S2
+    C2 --> S2
+    S1 --> CON["n12: Conclusion"]
+    S2 --> CON
+    C1 --> CON
+    C2 --> CON
+    R1 --> CON
+    style R fill:#172033,stroke:#3b82f6,color:#e2e8f0
+    style CON fill:#2a1d00,stroke:#fbbf24,color:#fef3c7
 ```
 
 ---

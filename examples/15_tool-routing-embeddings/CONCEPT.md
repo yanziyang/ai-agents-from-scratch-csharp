@@ -1,6 +1,6 @@
 ## Tool routing with embeddings and exemplars
 
-**Idea:** Before you call the chat model with `functions`, you **pre-filter** which tools it may see. A **small embedding model** scores how close the user message is to short **exemplar phrases** per tool (typical intents). You keep only the top-k tools (and optionally **always-include** tools), then run the normal tool-calling loop.
+**Idea:** Before you call the chat model with tools, you **pre-filter** which tools it may see. A **small local embedding model** scores how close the user message is to short **exemplar phrases** per tool (typical intents). You keep only the top-k tools (and optionally **always-include** tools), then run the normal tool-calling loop with the chat model.
 
 ---
 
@@ -18,16 +18,20 @@ Routing is a cheap pre-filter. The chat model still decides **arguments** and **
 
 ### Flow
 
-```text
-User message
-    → embed (small model, e.g. bge-small-en)
-    → cosine similarity vs precomputed exemplar embeddings (one per tool phrase)
-    → scoreTools()  →  Map<toolKey, maxSimilarity>
-    → selectToolKeys(scores, k, alwaysInclude)  →  Set<toolKey>
-    → session.prompt(..., { functions: subset })
+```mermaid
+flowchart LR
+    U["User message"]
+    E["Local embedding model<br/>(LLamaSharp)"]
+    S["ScoreTools: max cosine similarity per tool"]
+    SEL["SelectToolKeys:<br/>top-k + pinned"]
+    A["DeepSeek chat + tool subset"]
+    U --> E
+    E --> S
+    S --> SEL
+    SEL --> A
 ```
 
-The two routing steps are deliberately separate functions so each is easy to inspect and test independently.
+The two routing steps are deliberately separate methods so each is easy to inspect and test independently.
 
 Use the **same** embedding checkpoint for queries and exemplars. Mixing models breaks similarity.
 
@@ -37,7 +41,7 @@ Use the **same** embedding checkpoint for queries and exemplars. Mixing models b
 
 Each tool has several exemplar strings. The score for a tool is the **maximum** cosine similarity between the query and any of that tool's exemplars. Max beats mean: a single strong exemplar match keeps a tool competitive even if the others miss.
 
-**Good exemplars are not copies of user text.** In production you collect paraphrases, support tickets, and FAQ variants. If your exemplars are near-identical to live queries, routing looks "magic" but you are not testing generalization - and you will overfit to one phrasing.
+**Good exemplars are not copies of user text.** In production you collect paraphrases, support tickets, and FAQ variants. If your exemplars are near-identical to live queries, routing looks "magic" but you are not testing generalization — and you will overfit to one phrasing.
 
 ---
 
@@ -71,21 +75,21 @@ Pinned tools are merged into the set **after** retrieval so they do not consume 
 
 ### Which embedding model?
 
-For this repository's **local, node-llama-cpp–only** path: **[bge-small-en-v1.5](https://huggingface.co/CompendiumLabs/bge-small-en-v1.5-gguf)** in GGUF form (Q8_0). It is small, English-oriented, and well-documented alongside `createEmbeddingContext`.
+For the C# port, the example uses LLamaSharp with a local GGUF embedding model. The default path is `models/bge-small-en-v1.5-q8_0.gguf`. It is small, English-oriented, and works well with LLamaSharp's `LLamaEmbedder`.
 
-Alternatives: a lighter quantization of the same family for lower RAM; a **multilingual** embedding GGUF if user intents are not English - still always use one model for both exemplars and queries.
+Alternatives: a lighter quantization of the same family for lower RAM; a **multilingual** embedding GGUF if user intents are not English — still always use one model for both exemplars and queries.
 
 ---
 
-### Chat stack detail (Qwen3 + tools)
+### Chat stack detail (DeepSeek + tools)
 
-With the default Qwen chat template, the model may write the user-visible answer after a tool call only inside internal "thought" segments. `session.prompt()` returns plain-text segments, so you can get an **empty string** even though a tool ran. Using `QwenChatWrapper` with `thoughts: "discourage"` avoids that trap.
+The chat model is DeepSeek V4 Flash accessed through the OpenAI .NET SDK. Tool definitions are passed via `ChatCompletionOptions.Tools`, and the agent loop handles tool calls with `ChatMessage.CreateToolMessage`.
 
 ---
 
 ### Core takeaway
 
-Tool routing is **RAG for tools**: exemplars are documents, the user message is the query, and cosine similarity is retrieval. It does not replace careful tool design or the chat model's judgment - but it scales agent catalogs the same way retrieval scales knowledge bases.
+Tool routing is **RAG for tools**: exemplars are documents, the user message is the query, and cosine similarity is retrieval. It does not replace careful tool design or the chat model's judgment — but it scales agent catalogs the same way retrieval scales knowledge bases.
 
 ```text
 Without routing:  12 tools → 12 schemas in prompt (fine)

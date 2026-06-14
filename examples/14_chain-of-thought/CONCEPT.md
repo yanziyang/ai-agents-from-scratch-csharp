@@ -6,18 +6,21 @@
 
 ### Visual chain
 
-```text
-[Return request: "Defect claim on headphones"]
-         |
-[Phase 1: Facts only]
-         |
-[Phase 2: Red flags]
-         |
-[Phase 3: Legitimacy]
-         |
-[Phase 4: Policy check]
-         |
-[Phase 5: Final decision]
+```mermaid
+flowchart TD
+    R["Return request:<br/>Defect claim on headphones"]
+    F["Phase 1: Facts only"]
+    RF["Phase 2: Red flags"]
+    L["Phase 3: Legitimacy"]
+    P["Phase 4: Policy check"]
+    D["Phase 5: Final decision"]
+    R --> F
+    F --> RF
+    RF --> L
+    L --> P
+    P --> D
+    style R fill:#172033,stroke:#3b82f6,color:#e2e8f0
+    style D fill:#2a1d00,stroke:#fbbf24,color:#fef3c7
 ```
 
 ---

@@ -2,70 +2,60 @@
 
 ## Overview
 
-Function calling transforms LLMs from text generators into agents that can take actions and interact with the world.
+Function calling transforms an LLM from a text generator into an **agent** that can take actions and interact with the world.
 
 ## What Makes an Agent?
 
+```mermaid
+flowchart LR
+    T[Text Generator<br/>LLM → text only]
+    A[Agent<br/>LLM + Tools → can act]
+    T --> A
 ```
-Text Generator              Agent
-──────────────             ──────
-LLM → Text only            LLM + Tools → Can act
-```
-
-**Function calling** lets the LLM invoke predefined functions to access data or perform actions it cannot do alone.
-
-## The Core Idea
-
-```
-User: "What time is it?"
-       ↓
-LLM thinks: "I need current time"
-       ↓  
-LLM calls: getCurrentTime()
-       ↓
-Tool returns: "1:46:36 PM"
-       ↓
-LLM responds: "It's 13:46"
-```
-
-This is agency - the ability to DO, not just SAY.
 
 ## How It Works
 
-### 1. Function Definition
-```javascript
-getCurrentTime = {
-  description: "Get the current time",
-  handler: () => new Date().toLocaleTimeString()
-}
+```mermaid
+sequenceDiagram
+    participant User
+    participant LLM
+    participant Tool
+    User->>LLM: "What time is it?"
+    LLM->>Tool: getCurrentTime()
+    Tool-->>LLM: "1:46:36 PM"
+    LLM-->>User: "13:46"
 ```
 
-### 2. LLM Sees Available Tools
-```
-Available functions:
-- getCurrentTime: "Get the current time"
-- getWeather: "Get weather for a city"  
-- calculate: "Perform math"
+## Agent = LLM + System Prompt + Tools
+
+```mermaid
+flowchart TB
+    subgraph Agent
+        S[System Prompt]
+        L[LLM Brain]
+        T[Tools]
+    end
+    S --> L --> T
 ```
 
-### 3. LLM Decides When to Use
-```
-"What time?" → getCurrentTime() ✓
-"What's 5+5?" → calculate() ✓
-"Tell a joke" → No tool needed
-```
+## Tool Definition Anatomy
+
+| Field | Purpose |
+|-------|---------|
+| `name` | Identifier used in code |
+| `description` | Helps the LLM decide when to call it |
+| `parametersSchema` | JSON Schema for arguments |
+| `handler` | C# code that executes the tool |
 
 ## Real-World Applications
 
-**Personal Assistant**: Calendar, email, reminders
-**Research Agent**: Web search, document reading
-**Coding Assistant**: File operations, code execution
-**Data Analyst**: Database queries, calculations
+- **Personal assistant**: calendar, reminders, email.
+- **Research agent**: web search, document reading.
+- **Coding assistant**: run code, check errors.
+- **Data analyst**: query databases, compute statistics.
 
-When you have many tools, sending the full catalog on every turn can waste context and increase wrong-tool calls; see [Example 15: tool routing with embeddings](../15_tool-routing-embeddings/CONCEPT.md) for a small embedding + exemplar pre-filter before the chat model runs.
+When you have many tools, sending the full catalog on every turn wastes context. Chapter 15 shows how to route tools using embeddings.
 
 ## Key Takeaway
 
-Function calling is THE feature that enables AI agents. Without it, LLMs can only talk. With it, they can act.
-
-This is the foundation of all modern agent systems.
+Function calling is the feature that enables AI agents. Without it, LLMs can only talk. With it, they can act.

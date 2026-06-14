@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AiAgents.Core/AiAgents.Core.csproj" />
+    <Project Path="src/Chapter01/Chapter01.csproj" />
+    <Project Path="src/Chapter02/Chapter02.csproj" />
+    <Project Path="src/Chapter03/Chapter03.csproj" />
+    <Project Path="src/Chapter04/Chapter04.csproj" />
+    <Project Path="src/Chapter05/Chapter05.csproj" />
+    <Project Path="src/Chapter06/Chapter06.csproj" />
+    <Project Path="src/Chapter07/Chapter07.csproj" />
+    <Project Path="src/Chapter08/Chapter08.csproj" />
+    <Project Path="src/Chapter09/Chapter09.csproj" />
+    <Project Path="src/Chapter10/Chapter10.csproj" />
+    <Project Path="src/Chapter11/Chapter11.csproj" />
+    <Project Path="src/Chapter12/Chapter12.csproj" />
+    <Project Path="src/Chapter13/Chapter13.csproj" />
+    <Project Path="src/Chapter14/Chapter14.csproj" />
+    <Project Path="src/Chapter15/Chapter15.csproj" />
+  </Folder>
+</Solution>
