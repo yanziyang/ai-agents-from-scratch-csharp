@@ -9,4 +9,14 @@ Other requirement:
 3. Do the changes chaper by chapter.
 4. Enrich the tutorial with mermaid digram if possible
 
+--------------------------------------------------
 
+Build a local tutorial web using typescript/Javascript.
+
+--------------------------------------------------
+
+For all .NET projects in src folder, add logging of raw request that sending to Deepseek and Raw response from Deepseek. 
+Format content to be human friendly.
+Each request/reposne will be separate log file.
+Save the log in logs folder.
+Make the log directory configurable, save setting into application configuration file.

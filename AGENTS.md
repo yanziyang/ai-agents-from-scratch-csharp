@@ -23,7 +23,7 @@ Guidance for OpenCode sessions working in this .NET 10 / C# tutorial repo. Each 
 ## Secrets & config (this trips up every new agent)
 
 - **Per-chapter config files:**
-  - `src/ChapterNN/appsettings.json` — non-secret, **committed**. Contains `DeepSeek.BaseUrl`, `DeepSeek.ChatModel` (`deepseek-v4-flash`); Chapter 15 also has `Embeddings.ModelPath`.
+  - `src/ChapterNN/appsettings.json` — non-secret, **committed**. Contains `DeepSeek.BaseUrl`, `DeepSeek.ChatModel` (`deepseek-v4-flash`), and a `Logging` section; Chapter 15 also has `Embeddings.ModelPath`.
   - `src/ChapterNN/appsettings.Secrets.example.json` — **committed** template with `DeepSeek.ApiKey: "your-deepseek-api-key-here"`.
   - `src/ChapterNN/appsettings.Secrets.json` — **git-ignored**, holds the real key. Must be created locally before the chapter can run.
 - **One-time setup, all chapters** (PowerShell, run from repo root):
@@ -43,6 +43,15 @@ Guidance for OpenCode sessions working in this .NET 10 / C# tutorial repo. Each 
 - The repo uses the **official `OpenAI` .NET SDK** pointed at DeepSeek's OpenAI-compatible base URL (`https://api.deepseek.com`). Everything is an `OpenAI.Chat.ChatClient` — there is no DeepSeek-specific client class. Custom wiring lives in `src/AiAgents.Core/Client/DeepSeekClientFactory.cs`.
 - Default model name is **`deepseek-v4-flash`**. Change it in `appsettings.json` under `DeepSeek.ChatModel` if needed; the SDK is called with that string verbatim.
 - The OpenAI SDK package is referenced only by `AiAgents.Core`; chapter projects do not need to reference it directly — they use the helpers.
+
+## Request/response logging
+
+- Raw HTTP traffic to DeepSeek is logged via a `DeepSeekLoggingPolicy` registered in `DeepSeekClientFactory`. It is enabled by default through the `Logging` section in each chapter's `appsettings.json`.
+- **Config keys:**
+  - `Logging:Enabled` (`true`/`false`) — turns logging on or off.
+  - `Logging:LogDirectory` — directory for log files, relative to the current working directory. Defaults to `logs`.
+- **Output:** one file per request/response round-trip, named `deepseek_<timestamp>_<correlation-id>.log`. Files contain pretty-printed JSON for buffered responses and raw SSE chunks for streaming responses.
+- The `Authorization` header value is redacted in logs. Logging failures are written to `stderr` and do not crash the chapter.
 
 ## Companion website (`web/`)
 
