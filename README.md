@@ -1,4 +1,4 @@
-# AI Agents From Scratch — .NET 10 / DeepSeek Edition
+# AI Agents From Scratch — .NET C# Edition
 
 Learn to build AI agents from first principles in C# with .NET 10. The examples use **DeepSeek V4 Flash** via the OpenAI .NET SDK, so you can focus on agent patterns without managing a local chat model. Chapter 15 also shows how to add a **local embedding model** with LLamaSharp for tool routing.
 
